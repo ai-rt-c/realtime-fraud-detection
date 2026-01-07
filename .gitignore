@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+
+# Spark / Ivy / Java
+.ivy2/
+jars/
+*.jar
+
+# Docker
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+tmp/
+.cache/
