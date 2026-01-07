@@ -2,18 +2,16 @@
 __pycache__/
 *.pyc
 
-# Spark / Ivy / Java
-.ivy2/
-jars/
+# Spark / Java
 *.jar
-
-# Docker
+*.class
 *.log
+
+# Spark cache / ivy
+.ivy2/
+.sparkStaging/
+tmp/
 
 # OS
 .DS_Store
 Thumbs.db
-
-# Temp
-tmp/
-.cache/
