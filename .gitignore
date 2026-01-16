@@ -15,3 +15,16 @@ tmp/
 # OS
 .DS_Store
 Thumbs.db
+# Data files
+*.csv
+data/
+producer/*.csv
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Spark / Java
+*.jar
+.ivy2/
+.cache/
