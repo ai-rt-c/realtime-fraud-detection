@@ -2,7 +2,7 @@ import json
 import time
 import random
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import pandas as pd
 from faker import Faker
 from kafka import KafkaProducer
@@ -32,7 +32,7 @@ def generate_synthetic_transaction(amount_mean, amount_std, fraud_rate):
         "user_id": random.randint(1, 1000),
         "amount": round(np.random.normal(amount_mean, amount_std), 2),  # Preserve distribution
         "merchant_id": random.randint(1, 100),
-        "timestamp": (datetime.utcnow() - timedelta(seconds=random.randint(0, 60))).isoformat(),  # All in 1 minute for testing
+        "timestamp": (datetime.now(timezone.utc) - timedelta(seconds=random.randint(0, 60))).isoformat(),  # All in 1 minute for testing
         "is_fraud": 1 if random.random() < fraud_rate else 0  # Preserve fraud rate ~0.17%
     }
 
@@ -45,20 +45,20 @@ if args.input_file:
     # Calculate patterns for synthetic
     amount_mean = df['Amount'].mean()
     amount_std = df['Amount'].std()
-    fraud_rate = df['Class'].mean()
+    fraud_rate = df['Class'].mean() if 'Class' in df.columns else 0.0017
     
-    # Convert to list of dicts (map columns to your schema)
+    print(f"Loaded {len(df)} records from {args.input_file}")
+    print(f"Mean amount: {amount_mean:.2f}, Std: {amount_std:.2f}, Fraud rate: {fraud_rate*100:.3f}%")
+    
     for _, row in df.iterrows():
         seed_records.append({
             "transaction_id": random.randint(100000, 999999),  # Add if missing
             "user_id": random.randint(1, 1000),  # Synthetic if missing
             "amount": row['Amount'],
             "merchant_id": random.randint(1, 100),  # Synthetic
-            "timestamp": (datetime.utcnow() - timedelta(seconds=int(row['Time']) % 60)).isoformat(),  # Limit Time to 0-60 seconds for testing
-            "timestamp": (datetime.utcnow() - timedelta(seconds=int(row['Time']))).isoformat(),  # Convert Time to ISO
+            "timestamp": (datetime.now(timezone.utc) - timedelta(seconds=int(row['Time']))).isoformat(),  # Convert Time to ISO
             "is_fraud": row['Class']
         })
-    print(f"Loaded {len(seed_records)} seed records from {args.input_file}")
     seed_records = seed_records[:min(len(seed_records), args.num_records)]
 else:
     amount_mean, amount_std, fraud_rate = 88.0, 250.0, 0.0017  # Defaults if no seed
@@ -77,4 +77,9 @@ for _ in range(max(0, remaining)):
     print(f"Sent synthetic: {tx}")
     time.sleep(1 / args.rate)
 
-print("✅ Producer finished.")
+# Flush and close producer cleanly
+print("Flushing remaining messages...")
+producer.flush(timeout=60)  # Give 60 seconds for flush
+print("Closing producer...")
+producer.close(timeout=10)
+print("✅ Producer finished and closed cleanly.")

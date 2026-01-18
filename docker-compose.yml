@@ -30,6 +30,8 @@ services:
     volumes:
       - ./spark:/opt/spark-apps
       - ./ivy-cache:/tmp/ivy
+      - ./output:/output
+      - ./checkpoint:/checkpoint
     environment:
       - SPARK_LOCAL_IP=127.0.0.1
     command: >

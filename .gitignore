@@ -11,20 +11,21 @@ __pycache__/
 .ivy2/
 .sparkStaging/
 tmp/
+ivy-cache/
+.cache/
 
 # OS
 .DS_Store
 Thumbs.db
+
 # Data files
 *.csv
 data/
 producer/*.csv
+checkpoint/
+output/
+output_local/
 
-# Python cache
-__pycache__/
-*.pyc
-
-# Spark / Java
-*.jar
-.ivy2/
-.cache/
+# Visualization (debug / optional)
+visualization/visualize_all_batches.py
+check_parquet.py
