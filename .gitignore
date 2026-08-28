@@ -1,31 +1,31 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
 
-# Spark / Java
+# Spark / Java / dependency caches
 *.jar
 *.class
 *.log
-
-# Spark cache / ivy
 .ivy2/
 .sparkStaging/
-tmp/
 ivy-cache/
 .cache/
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Data files
-*.csv
-data/
-producer/*.csv
+# Local runtime state and generated outputs
 checkpoint/
 output/
 output_local/
+artifacts/
 
-# Visualization (debug / optional)
-visualization/visualize_all_batches.py
-check_parquet.py
+# Local input data
+*.csv
+data/
+producer/*.csv
+
+# Operating-system files
+.DS_Store
+Thumbs.db

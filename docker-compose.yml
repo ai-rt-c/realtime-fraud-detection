@@ -21,22 +21,59 @@ services:
       KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
       KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
 
   spark:
     image: apache/spark:3.5.1
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     volumes:
-      - ./spark:/opt/spark-apps
+      - ./spark:/opt/spark-apps:ro
       - ./ivy-cache:/tmp/ivy
       - ./output:/output
       - ./checkpoint:/checkpoint
     environment:
-      - SPARK_LOCAL_IP=127.0.0.1
+      SPARK_LOCAL_IP: 127.0.0.1
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: transactions
+      KAFKA_STARTING_OFFSETS: earliest
+      SPARK_OUTPUT_PATH: /output
+      SPARK_CHECKPOINT_PATH: /checkpoint
+      SPARK_WATERMARK_DELAY: 30 seconds
+      SPARK_TRIGGER_INTERVAL: 5 seconds
+      SPARK_CONSOLE_OUTPUT: "true"
     command: >
       /opt/spark/bin/spark-submit
       --master local[*]
       --conf spark.jars.ivy=/tmp/ivy
       --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1
       /opt/spark-apps/spark_streaming.py
+    restart: on-failure:3
+
+  producer:
+    build:
+      context: ./producer
+    profiles: ["producer"]
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      PYTHONUNBUFFERED: "1"
+    command:
+      [
+        "--bootstrap-server",
+        "kafka:29092",
+        "--num-records",
+        "10000",
+        "--rate",
+        "1000",
+      ]
